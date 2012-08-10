@@ -55,6 +55,10 @@ class Saml2Backend(ModelBackend):
         user = None
         username = self.clean_username(saml_user)
 
+        if not self.allow_user(username, attributes):
+            logger.error("user '%s' does not pass attribute filtering" % username)
+            return None
+
         # Note that this could be accomplished in one try-except clause, but
         # instead we use get_or_create when creating unknown users since it has
         # built-in safeguards for multiple threads.
@@ -78,6 +82,15 @@ class Saml2Backend(ModelBackend):
                 pass
 
         return user
+
+    def allow_user(self, username, attributes):
+        """Performs filtering of users based on their attributes.
+        Returns True if user passes filtering, otherwise False
+        which denies user of authentication.
+
+        By default, returns True.
+        """
+        return True
 
     def clean_username(self, username):
         """Performs any cleaning on the "username" prior to using it to get or
